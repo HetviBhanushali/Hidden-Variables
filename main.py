@@ -8,12 +8,10 @@ import os, shutil, tempfile
 login(os.getenv("HF_TOKEN"))
 
 def ingest_pdf(pdf_bytes):                     
-    # new - save bytes as temp file
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(pdf_bytes)
         tmp_path = tmp.name
 
-    # same as before
     documents = PyPDFLoader(tmp_path).load()
     print("PDF LOADED!")
 
