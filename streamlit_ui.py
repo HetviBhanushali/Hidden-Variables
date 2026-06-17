@@ -1,36 +1,44 @@
 import streamlit as st
+import tempfile
+
+from vector import build_index
 from main import answer_question
-st.title("Echo bot")
 
+st.title("PDF Q&A Bot")
 
-with st.sidebar:
-    uploaded_file = st.file_uploader(
-        "Upload PDF",
-        type=["pdf"]
-    )
-
-
-prompt = st.chat_input("Ask a question about the PDF")
-
-if prompt:
-    st.chat_message("user").write(prompt)
-
-    answer = answer_question(prompt) 
-    st.chat_message("assistant").write(answer)
+uploaded_file = st.sidebar.file_uploader(
+    "Upload PDF",
+    type=["pdf"]
+)
 
 if uploaded_file:
 
-    from pypdf import PdfReader
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".pdf"
+    ) as tmp:
 
-    pdf = PdfReader(uploaded_file)
+        tmp.write(uploaded_file.read())
+        pdf_path = tmp.name
 
-    text = ""
+    build_index(pdf_path)
 
-    for page in pdf.pages:
-        page_text = page.extract_text()
+    st.success("PDF indexed successfully!")
 
-        if page_text:
-            text += page_text
+prompt = st.chat_input(
+    "Ask a question"
+)
 
-    st.write("Pages:", len(pdf.pages))
-    st.text(text[:3000])
+if prompt:
+
+    st.chat_message("user").write(prompt)
+
+    answer = answer_question(prompt)
+
+    st.chat_message("assistant").write(answer)
+
+if uploaded_file and "indexed" not in st.session_state:
+
+    build_index(pdf_path)
+
+    st.session_state.indexed = True
