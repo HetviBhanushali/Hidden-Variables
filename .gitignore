@@ -13,3 +13,4 @@ chroma_langchain_db/
 PDF/
 *.txt
 uv.lock
+.gitignore
