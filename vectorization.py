@@ -21,14 +21,11 @@ vector_store = Chroma(
 
 print(f"Collection count: {vector_store._collection.count()}")
 
-while True:
-    user_prompt = input("\nPrompt (type 'q' to quit): ")
 
-    if user_prompt.strip().lower() == "q":
-        break
+def retrieve(query):
 
     results = vector_store.similarity_search_with_score(
-        user_prompt,
+        query,
         k=5
     )
 
@@ -37,6 +34,18 @@ while True:
         for doc, score in results
         if score < 1.0
     ]
+
+    return filtered_results
+
+
+while True:
+
+    user_prompt = input("\nPrompt (type 'q' to quit): ")
+
+    if user_prompt.strip().lower() == "q":
+        break
+
+    filtered_results = retrieve(user_prompt)
 
     if not filtered_results:
         print("No relevant information found in the PDF.")
