@@ -3,7 +3,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from huggingface_hub import login
-import os, shutil                          # added shutil
+import os, shutil                       
 
 HF_TOKEN = os.getenv("HF_TOKEN")
 login(HF_TOKEN)
@@ -20,7 +20,6 @@ print("DOCUMENT SPLITTED")
 embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 print("EMBEDDINGS LOADED")
 
-# ✅ added - removes old data before saving new
 if os.path.exists("./chroma_langchain_db"):
     shutil.rmtree("./chroma_langchain_db")
     print("OLD DATA REMOVED!")
