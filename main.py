@@ -3,54 +3,32 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from huggingface_hub import login
-from dotenv import load_dotenv
-import os
-import glob
+import os, shutil                          # added shutil
 
-load_dotenv()
-hf_token=os.getenv("hf_token")
-login(hf_token)
+HF_TOKEN = os.getenv("HF_TOKEN")
+login(HF_TOKEN)
 
-pdf=[f for f in glob.glob(os.path.join("PDF","*.pdf"))
-    if f.endswith(".pdf")]
+pdf_path = os.path.join("PDF","vector.pdf")
+loader = PyPDFLoader(os.path.join("PDF", "sample.pdf"))
+documents = loader.load()
+print("PDF LOADED!")
 
-if not pdf:
-    print("No PDFs found! Make sure files have .pdf extension!")
-    exit()
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+chunks = text_splitter.split_documents(documents)
+print("DOCUMENT SPLITTED")
 
-non_pdf=[f for f in glob.glob(os.path.join("PDF","*"))
-        if not f.endswith(".pdf")]
+embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+print("EMBEDDINGS LOADED")
 
-if non_pdf:
-    print(f"Skipping non-PDF files:{[os.path.basename(f) for f in non_pdf]}")
-
-print(f"Found {len(pdf)} PDF")
-
-all_documents=[]
-for pdf_path in pdf:
-    docs=PyPDFLoader(pdf_path).load()
-    all_documents.extend(docs)
-    print(f"Loaded: {os.path.basename(pdf_path)} - {len(docs)} pages")
-
-chunks=RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=100
-).split_documents(all_documents)
-
-print(f"Total Chunks: {len(chunks)}")
-
-embeddings=HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
-
-import shutil
+# ✅ added - removes old data before saving new
 if os.path.exists("./chroma_langchain_db"):
     shutil.rmtree("./chroma_langchain_db")
-    print("Old Data cleared!")
+    print("OLD DATA REMOVED!")
 
-vector_store=Chroma.from_documents(
+vector_store = Chroma.from_documents(
     documents=chunks,
     collection_name="pdf-rag",
     embedding=embeddings,
     persist_directory="./chroma_langchain_db"
 )
-
-print(f"Done! Stored {vector_store._collection.count()} Vectors")
+print("SAVED!")
