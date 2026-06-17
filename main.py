@@ -3,31 +3,37 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from huggingface_hub import login
-import os, shutil                       
+import os, shutil, tempfile                
 
-HF_TOKEN = os.getenv("HF_TOKEN")
-login(HF_TOKEN)
+login(os.getenv("HF_TOKEN"))
 
-pdf_path = os.path.join("PDF","vector.pdf")
-loader = PyPDFLoader(os.path.join("PDF", "sample.pdf"))
-documents = loader.load()
-print("PDF LOADED!")
+def ingest_pdf(pdf_bytes):                     
+    # new - save bytes as temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(pdf_bytes)
+        tmp_path = tmp.name
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-chunks = text_splitter.split_documents(documents)
-print("DOCUMENT SPLITTED")
+    # same as before
+    documents = PyPDFLoader(tmp_path).load()
+    print("PDF LOADED!")
 
-embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
-print("EMBEDDINGS LOADED")
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    chunks = text_splitter.split_documents(documents)
+    print("DOCUMENT SPLITTED")
 
-if os.path.exists("./chroma_langchain_db"):
-    shutil.rmtree("./chroma_langchain_db")
-    print("OLD DATA REMOVED!")
+    embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+    print("EMBEDDINGS LOADED")
 
-vector_store = Chroma.from_documents(
-    documents=chunks,
-    collection_name="pdf-rag",
-    embedding=embeddings,
-    persist_directory="./chroma_langchain_db"
-)
-print("SAVED!")
+    if os.path.exists("./chroma_langchain_db"):
+        shutil.rmtree("./chroma_langchain_db")
+        print("OLD DATA REMOVED!")
+
+    vector_store = Chroma.from_documents(
+        documents=chunks,
+        collection_name="pdf-rag",
+        embedding=embeddings,
+        persist_directory="./chroma_langchain_db"
+    )
+    print("SAVED!")
+
+    os.unlink(tmp_path)                       
