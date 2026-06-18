@@ -1,8 +1,8 @@
-from langchain_groq import ChatGroq
+from langchain_groq import ChatGroq  #importing groq API
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv() #Loading the API
 API_KEY = os.getenv("API_KEY")
 
 llm = ChatGroq(

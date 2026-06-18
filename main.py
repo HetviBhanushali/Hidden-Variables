@@ -1,3 +1,4 @@
+#Here the main RAG is implemented
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 from huggingface_hub import login
