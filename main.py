@@ -1,38 +1,57 @@
 from langchain_groq import ChatGroq
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
 from dotenv import load_dotenv
-import os
 from huggingface_hub import login
-
+from vectorization import retrieve
+import os
 
 load_dotenv()
+
 API_KEY = os.getenv("API_KEY")
 HF_TOKEN = os.getenv("HF_TOKEN")
+
 login(HF_TOKEN)
 
-embeddings = HuggingFaceEmbeddings(model = "BAAI/bge-small-en-v1.5")
-
-vector_store = Chroma(
-    collection_name= "pdf-rag",
-    persist_directory="./chroma_langchain_db",
-    embedding_function=embeddings
+llm = ChatGroq(
+    model="llama-3.1-8b-instant",
+    groq_api_key=API_KEY
 )
 
-print(f"Collection count: {vector_store._collection.count()}")
+def answer_question(question, collection_name):
 
-while True:
-    user_prompt = input("Prompt (Enter 'q' to quit) : ")
-    
-    if user_prompt.split() == 'q':
-        break
-    
-    results = vector_store.similarity_search(
-        user_prompt, 
-        k= 5
+    print("Collection Name:", collection_name)
+
+    docs = retrieve(
+        question,
+        collection_name,
+        k=3
     )
-    
-for i, doc in enumerate(results, 1):
-    print(f"Result: {i}")
-    print(doc.page_content)
-    print(" ")
+
+    print("Retrieved Docs:", len(docs))
+
+    for i, d in enumerate(docs, start=1):
+        print(f"\nDocument {i}")
+        print(d.page_content[:300])
+
+    context = "\n\n".join(
+        [d.page_content for d in docs]
+    )
+
+    if not context.strip():
+        return "No relevant content found in the vector database."
+
+    prompt = f"""
+Answer the question using only the provided context.
+
+If the answer is not present in the context, say:
+'I could not find the answer in the provided PDF.'
+
+Context:
+{context}
+
+Question:
+{question}
+"""
+
+    response = llm.invoke(prompt)
+
+    return response.content
