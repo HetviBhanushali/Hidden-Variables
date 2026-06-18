@@ -1,457 +1,159 @@
-# PDF Question Answering Chatbot using RAG
+# Hidden Variables 🔍
 
-## Overview
-
-This project is a Retrieval-Augmented Generation (RAG) based PDF Question Answering Chatbot that allows users to upload PDF documents and ask questions about their contents.
-
-Instead of relying solely on a Large Language Model (LLM), the system retrieves relevant information directly from uploaded documents and uses that context to generate accurate, document-grounded answers.
-
-The chatbot also provides:
-
-* Source citations (page references)
-* Confidence scores
-* Hallucination prevention
-* Document summarization
-* Performance evaluation metrics
+A **PDF Question-Answering Chatbot** built with Retrieval-Augmented Generation (RAG). Upload any PDF and ask questions — the system retrieves relevant chunks from the document and generates accurate, context-grounded answers using a Groq-powered LLM.
 
 ---
 
-## Features
+## How It Works
 
-### PDF Upload & Processing
-
-* Upload one or more PDF files
-* Extract text from PDFs
-* OCR support for scanned PDFs
-* Text cleaning and preprocessing
-
-### Intelligent Retrieval
-
-* Document chunking
-* Embedding generation
-* Vector database indexing
-* Semantic similarity search
-
-### Question Answering
-
-* Natural language querying
-* Context-aware answers
-* Top-k retrieval
-* Prompt engineering
-
-### Explainability
-
-* Source page references
-* Confidence scores
-* Answer validation
-
-### Document Summarization
-
-* Executive Summary
-* Key Topics
-* Main Conclusions
-
-### Evaluation
-
-* Retrieval Accuracy
-* Response Latency
-* Answer Relevance
-* User Satisfaction
-
----
-
-## System Architecture
-
-```text
-User Uploads PDF
-        │
-        ▼
-PDF Processing
-(Text Extraction + OCR)
-        │
-        ▼
-Chunking
-        │
-        ▼
-Embeddings
-        │
-        ▼
-ChromaDB Vector Store
-        │
-        ▼
-User Question
-        │
-        ▼
-Similarity Search
-        │
-        ▼
-Relevant Chunks
-        │
-        ▼
-LLM (Gemini/Groq)
-        │
-        ▼
-Generated Answer
-        │
-        ▼
-Explainability Layer
-(Source + Confidence)
-        │
-        ▼
-Final Response
 ```
-
----
-
-## Team Responsibilities
-
-### Member 1 – PDF Processing & Chunking
-
-Responsibilities:
-
-* PDF upload
-* Text extraction
-* OCR support
-* Text cleaning
-* Chunk generation
-* Page metadata extraction
-
-Output:
-
-```python
-{
-    "text": "...",
-    "page": 12,
-    "chunk_id": 45
-}
+Upload PDF
+    │
+    ▼
+PyPDFLoader → Text Extraction
+    │
+    ▼
+RecursiveCharacterTextSplitter → Chunks (1000 tokens, 200 overlap)
+    │
+    ▼
+HuggingFace Embeddings (BAAI/bge-small-en-v1.5)
+    │
+    ▼
+ChromaDB Vector Store (persisted locally)
+    │
+    ▼
+User Question → Similarity Search (Top-k=3)
+    │
+    ▼
+Groq LLM (Llama 3.1 8B Instant) → Answer
+    │
+    ▼
+Streamlit UI → Response Displayed
 ```
-
----
-
-### Member 2 – Embeddings & Vector Database
-
-Responsibilities:
-
-* Embedding generation
-* ChromaDB setup
-* Vector indexing
-* Similarity search
-
-Output:
-
-```python
-retrieved_chunks
-similarity_scores
-```
-
----
-
-### Member 3 – Retrieval & LLM Pipeline
-
-Responsibilities:
-
-* Query handling
-* Top-k retrieval
-* Prompt engineering
-* Gemini/Groq integration
-* Answer generation
-
-Output:
-
-```python
-{
-    "question": "...",
-    "answer": "..."
-}
-```
-
----
-
-### Member 4 – Explainability & Evaluation
-
-Responsibilities:
-
-* Source highlighting
-* Confidence scores
-* Hallucination detection
-* PDF summarization
-* Evaluation metrics
-
-Output:
-
-```python
-{
-    "answer": "...",
-    "source_page": 17,
-    "confidence": "92%"
-}
-```
-
----
-
-## Technology Stack
-
-### Frontend
-
-* Streamlit
-
-### Backend
-
-* Python
-
-### AI Frameworks
-
-* LangChain
-* Sentence Transformers
-
-### LLM
-
-* Gemini API / Groq API
-
-### Vector Database
-
-* ChromaDB
-
-### PDF Processing
-
-* PyMuPDF
-* pdfplumber
-* pytesseract (OCR)
 
 ---
 
 ## Project Structure
 
-```text
-pdf-rag-chatbot/
-
+```
+Hidden-Variables/
 │
-├── app.py
-├── requirements.txt
-├── README.md
-│
-├── uploads/
-│
-├── data/
-│
-├── vector_db/
-│
-├── modules/
-│   ├── pdf_processor.py
-│   ├── chunker.py
-│   ├── embeddings.py
-│   ├── vector_store.py
-│   ├── retriever.py
-│   ├── llm_pipeline.py
-│   ├── confidence.py
-│   ├── validator.py
-│   ├── summarizer.py
-│   └── evaluation.py
-│
-└── tests/
+├── streamlit_ui.py      # Streamlit frontend — PDF upload + chat interface
+├── main.py              # LLM pipeline — question answering via Groq
+├── vector.py            # PDF loading, chunking, and ChromaDB indexing
+├── vectorization.py     # Embedding model + similarity search (retrieve)
+├── basic.py             # (utility / scratch module)
+├── requirement.txt      # Python dependencies
+└── README.md
 ```
 
 ---
 
-## Installation
+## Tech Stack
 
-### Clone Repository
+| Layer | Tool |
+|---|---|
+| Frontend | Streamlit |
+| LLM | Groq — `llama-3.1-8b-instant` |
+| Embeddings | HuggingFace — `BAAI/bge-small-en-v1.5` |
+| Vector DB | ChromaDB (local persistence) |
+| PDF Loading | LangChain `PyPDFLoader` |
+| Chunking | `RecursiveCharacterTextSplitter` |
+| Auth | `python-dotenv`, `huggingface_hub` login |
+
+---
+
+## Setup
+
+### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
-cd pdf-rag-chatbot
+git clone https://github.com/HetviBhanushali/Hidden-Variables.git
+cd Hidden-Variables
 ```
 
-### Create Virtual Environment
+### 2. Create and activate a virtual environment
 
-Windows:
-
+**Windows:**
 ```bash
 python -m venv venv
 venv\Scripts\activate
 ```
 
-Linux/Mac:
-
+**Linux/macOS:**
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Install Dependencies
+### 3. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirement.txt
 ```
 
----
+### 4. Set up environment variables
 
-## Environment Variables
-
-Create a `.env` file:
+Create a `.env` file in the project root:
 
 ```env
-GEMINI_API_KEY=your_api_key
-
-# OR
-
-GROQ_API_KEY=your_api_key
+API_KEY=your_groq_api_key
+HF_TOKEN=your_huggingface_token
 ```
+
+- Get your Groq API key at [console.groq.com](https://console.groq.com)
+- Get your HuggingFace token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
 ---
 
-## Running the Project
-
-### Start Streamlit Application
+## Running the App
 
 ```bash
-streamlit run app.py
+streamlit run streamlit_ui.py
 ```
 
-Application will be available at:
-
-```text
-http://localhost:8501
-```
+Then open your browser at `http://localhost:8501`.
 
 ---
 
-## Workflow
+## Usage
 
-### Step 1
-
-Upload PDF document.
-
-### Step 2
-
-System extracts text and creates chunks.
-
-### Step 3
-
-Chunks are converted into embeddings.
-
-### Step 4
-
-Embeddings are stored in ChromaDB.
-
-### Step 5
-
-User asks a question.
-
-Example:
-
-```text
-What is CNN used for?
-```
-
-### Step 6
-
-Retriever finds the most relevant chunks.
-
-### Step 7
-
-LLM generates an answer using retrieved context.
-
-### Step 8
-
-Explainability layer adds:
-
-* Source page
-* Confidence score
-* Validation status
-
-### Step 9
-
-Final response displayed.
-
-Example:
-
-```text
-Answer:
-CNN is primarily used for image processing and computer vision.
-
-Source:
-Page 17
-
-Confidence:
-92%
-
-Status:
-Verified
-```
+1. Upload a PDF using the sidebar file uploader.
+2. Wait for the success message — the PDF is chunked and indexed into ChromaDB.
+3. Type your question in the chat input.
+4. The app retrieves the top 3 most relevant chunks and passes them to the LLM.
+5. If the answer isn't found in the document, the model responds: *"I could not find the answer in the provided PDF."*
 
 ---
 
-## Evaluation Metrics
+## Key Implementation Details
 
-### Retrieval Accuracy
-
-```text
-Correct Retrievals / Total Queries
-```
-
-### Response Latency
-
-```text
-End Time - Start Time
-```
-
-### Answer Relevance
-
-Scale:
-
-```text
-1 - Poor
-2 - Fair
-3 - Good
-4 - Very Good
-5 - Excellent
-```
-
-### User Satisfaction
-
-```text
-Helpful Responses / Total Responses
-```
-
----
-
-## Future Enhancements
-
-* Multi-PDF support
-* Chat history
-* Hybrid search (BM25 + Vector Search)
-* Dashboard analytics
-* Multi-language PDFs
-* Advanced citations
-* Cloud deployment
-
----
-
-## Expected Output
-
-```text
-Question:
-What is CNN?
-
-Answer:
-CNN is a deep learning architecture used for image processing.
-
-Source:
-Page 17
-
-Confidence:
-92%
-
-Status:
-Verified
-```
+- **Chunking:** `chunk_size=1000`, `chunk_overlap=200` via `RecursiveCharacterTextSplitter`
+- **Embeddings:** `BAAI/bge-small-en-v1.5` via `langchain-huggingface`
+- **Vector store:** ChromaDB persisted at `./chroma_langchain_db`, keyed by PDF filename (without extension)
+- **Retrieval:** Top-3 similarity search (`k=3`)
+- **LLM prompt:** Strictly context-grounded — the model is instructed not to hallucinate beyond the provided chunks
 
 ---
 
 ## Contributors
 
-* Member 1 – PDF Processing & Chunking
-* Member 2 – Embeddings & Vector Database
-* Member 3 – Retrieval & LLM Pipeline
-* Member 4 – Explainability & Evaluation
+This is a collaborative student project — **Hidden Variables** — built as part of a RAG exploration exercise.
+
+| Module | Responsibility |
+|---|---|
+| `vector.py` | PDF loading, chunking, ChromaDB indexing |
+| `vectorization.py` | Embedding model, similarity search |
+| `main.py` | Groq LLM integration, prompt engineering, answer generation |
+| `streamlit_ui.py` | Frontend UI, session state management |
+
+---
+
+## Future Scope
+
+- Multi-PDF support with collection switching
+- Explainability layer — source page references + confidence scores
+- Chat history / conversation memory
+- Evaluation metrics (retrieval accuracy, answer relevance)
+- Hybrid search (BM25 + vector)
+- Cloud deployment (Streamlit Cloud / HuggingFace Spaces)
