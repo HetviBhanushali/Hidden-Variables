@@ -9,6 +9,9 @@ st.title("PDF Q&A Bot")
 if "last_uploaded_file" not in st.session_state:
     st.session_state.last_uploaded_file = None
 
+if "collection_name" not in st.session_state:
+    st.session_state.collection_name = None
+
 uploaded_file = st.sidebar.file_uploader(
     "Upload PDF",
     type=["pdf"]
@@ -16,11 +19,14 @@ uploaded_file = st.sidebar.file_uploader(
 
 if uploaded_file is not None:
 
-    if uploaded_file.name != st.session_state.last_uploaded_file:
+    # Always keep collection name available
+    pdf_name = os.path.splitext(
+        uploaded_file.name
+    )[0]
 
-        pdf_name = os.path.splitext(
-            uploaded_file.name
-        )[0]
+    st.session_state.collection_name = pdf_name
+
+    if uploaded_file.name != st.session_state.last_uploaded_file:
 
         pdf_path = f"temp_{uploaded_file.name}"
 
@@ -35,7 +41,7 @@ if uploaded_file is not None:
         st.session_state.last_uploaded_file = uploaded_file.name
 
         st.success(
-            f"Indexed {num_chunks} chunks from {uploaded_file.name}"
+            "pdf loaded successfully"
         )
 
 prompt = st.chat_input(
@@ -44,8 +50,14 @@ prompt = st.chat_input(
 
 if prompt:
 
-    st.chat_message("user").write(prompt)
+    if st.session_state.collection_name is None:
+        st.error("Please upload a PDF first.")
+    else:
+        st.chat_message("user").write(prompt)
 
-    answer = answer_question(prompt)
+        answer = answer_question(
+            prompt,
+            st.session_state.collection_name
+        )
 
-    st.chat_message("assistant").write(answer)
+        st.chat_message("assistant").write(answer)
