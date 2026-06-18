@@ -16,27 +16,26 @@ llm = ChatGroq(
     groq_api_key=API_KEY
 )
 
-def answer_question(question):
+def answer_question(question, collection_name):
 
-    # Retrieve relevant chunks
-    docs = retrieve(question, k=3)
+    print("Collection Name:", collection_name)
+
+    docs = retrieve(
+        question,
+        collection_name,
+        k=3
+    )
 
     print("Retrieved Docs:", len(docs))
 
-    # Debug: print retrieved content
     for i, d in enumerate(docs, start=1):
         print(f"\nDocument {i}")
         print(d.page_content[:300])
 
-    # Combine chunks into context
     context = "\n\n".join(
         [d.page_content for d in docs]
     )
 
-    print("\nContext:")
-    print(context)
-
-    # Handle empty retrieval
     if not context.strip():
         return "No relevant content found in the vector database."
 
