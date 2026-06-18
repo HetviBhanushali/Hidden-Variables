@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+import re
 
 from vector import build_index
 from main import answer_question
@@ -23,7 +24,11 @@ if uploaded_file is not None:
     pdf_name = os.path.splitext(
         uploaded_file.name
     )[0]
-
+    pdf_name = re.sub(
+    r"[^a-zA-Z0-9._-]",
+    "_",
+    pdf_name
+)
     st.session_state.collection_name = pdf_name
 
     if uploaded_file.name != st.session_state.last_uploaded_file:
